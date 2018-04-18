@@ -102,6 +102,39 @@ def treeClassify(trainData,trainLable,testData,testLable):
     treeScore=metrics.accuracy_score(testLable, treePredict)
     return treePredict,treeScore
 
+def cnn(X_train, y_train, X_test, y_test):
+    from keras.models import Sequential  
+    from keras.layers.core import Dense, Dropout, Activation  
+    from keras.optimizers import RMSprop
+    from keras.datasets import mnist  
+    import numpy
+
+    model = Sequential()  
+    model.add(Dense(512, input_shape=(784,))) # 输入层，28*28=784  
+    model.add(Activation('relu')) # 激活函数是tanh  
+    model.add(Dropout(0.2)) # 采用50%的dropout
+
+    model.add(Dense(512)) # 隐层节点500个  
+    model.add(Activation('relu'))  
+    model.add(Dropout(0.2))
+
+    model.add(Dense(10)) # 输出结果是10个类别，所以维度是10  
+    model.add(Activation('softmax')) # 最后一层用softmax
+
+    model.summary()
+
+    model.compile(loss='categorical_crossentropy', optimizer=RMSprop(), metrics=['accuracy']) # 使用交叉熵作为loss函数
+
+    #(X_train, y_train), (X_test, y_test) = mnist.load_data() # 使用Keras自带的mnist工具读取数据（第一次需要联网）
+
+    X_train = X_train.reshape(X_train.shape[0], X_train.shape[1] * X_train.shape[2]) # 由于mist的输入数据维度是(num, 28, 28)，这里需要把后面的维度直接拼起来变成784维  
+    X_test = X_test.reshape(X_test.shape[0], X_test.shape[1] * X_test.shape[2])  
+    Y_train = (numpy.arange(10) == y_train[:, None]).astype(int) # 参考上一篇文章，这里需要把index转换成一个one hot的矩阵  
+    Y_test = (numpy.arange(10) == y_test[:, None]).astype(int)
+    
+    model.fit(X_train, Y_train, batch_size=200, nb_epoch=10, verbose=1, validation_data=(X_test,Y_test))  
+    print ('test set' )
+    model.evaluate(X_test, Y_test, batch_size=200, show_accuracy=True, verbose=1)  
 
 def DigitalRecognizer():
     trainData,trainLable, testData,testLable  =LoadTrainData()
